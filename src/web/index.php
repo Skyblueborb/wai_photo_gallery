@@ -11,12 +11,17 @@ session_start();
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 
-// Initialize the router and define routes
 $router = new Router();
 $router->addRoute('GET', '/', 'GalleryController', 'index');
 $router->addRoute('GET', '/upload', 'ImageUploadController', 'showForm');
-/* $router->addRoute('GET', '/', 'TestController', 'showPage'); */
 $router->addRoute('POST', '/upload', 'ImageUploadController', 'handleUpload');
+
+# Login/Registration
+$router->addRoute('GET', '/login', 'UserController', 'showLogin');
+$router->addRoute('GET', '/logout', 'UserController', 'logout');
+$router->addRoute('GET', '/register', 'UserController', 'showRegister');
+$router->addRoute('POST', '/login', 'UserController', 'handleLogin');
+$router->addRoute('POST', '/register', 'UserController','handleRegister');
 
 // Dispatch the request
 $router->dispatch($requestMethod, $requestUri);

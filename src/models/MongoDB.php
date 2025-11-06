@@ -1,7 +1,7 @@
 <?php
 
 // Make sure you have run "composer require mongodb/mongodb"
-require_once BASE_PATH . 'vendor/autoload.php';
+require_once BASE_PATH . DIRECTORY_SEPARATOR . '..'. DIRECTORY_SEPARATOR . 'vendor/autoload.php';
 
 // Define your MongoDB connection details as constants for easy configuration
 define('MONGO_DB_URI', 'mongodb://localhost:27017/wai');
@@ -61,12 +61,6 @@ class MongoDB {
      * @return \MongoDB\Database The selected database.
      */
     public function getDatabase() {
-        return $this->client->selectDatabase(MONGO_DB_NAME);
+        return $this->client->selectDatabase("wai");
     }
-
-    // Prevent the instance from being cloned
-    private function __clone() {}
-
-    // Prevent from being unserialized
-    private function __wakeup() {}
 }

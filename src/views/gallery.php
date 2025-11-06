@@ -53,7 +53,19 @@
 </head>
 <body>
 
-    <nav><a href="/upload">Upload a New Image</a></nav>
+    <nav>
+        <a href="/upload">Upload a New Image</a>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    </nav>
+    <?php if ($isLoggedIn): ?>
+        <span>Welcome, <?php echo htmlspecialchars($username); ?>!</span>
+        <img src="<?php echo htmlspecialchars($profile_picture); ?>"/>
+        <a href="/upload">Upload Image</a>
+        <a href="/logout">Logout</a>
+    <?php else: ?>
+        <a href="/login">Login / Register</a>
+    <?php endif; ?>
     <h1>Image Gallery</h1>
 
     <div class="gallery-container">
@@ -64,6 +76,8 @@
                     <a href="<?php echo htmlspecialchars($image['original']); ?>" target="_blank">
                         <img src="<?php echo htmlspecialchars($image['thumb']); ?>" alt="Thumbnail">
                     </a>
+                    <a> Title: <?php echo htmlspecialchars($image['metadata']['title']); ?> </a>
+                    <a> Author: <?php echo htmlspecialchars($image['metadata']['author']); ?> </a>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>

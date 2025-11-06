@@ -7,10 +7,12 @@ define('IMAGES_PATH', BASE_PATH .  DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPAR
 define("THUMB_WIDTH", 200);
 define("THUMB_HEIGHT", 125);
 
+require_once BASE_PATH . 'models/MongoDB.php';
+
 class ImageModel {
     private $errors = [];
 
-    public function save($image) {
+    public function save($image, $metadata) {
         $file_name = basename($image['name']);
         $mimetype = $image['type'];
         $allowed_extensions = ['jpg', 'png'];
@@ -33,8 +35,9 @@ class ImageModel {
 
         $timestamp = time();
         $filename_without_ext = pathinfo($file_name, PATHINFO_FILENAME);
+        $subdir_path = $timestamp . '_' . $filename_without_ext;
 
-        $target_dir = IMAGES_PATH . DIRECTORY_SEPARATOR . $timestamp . '_' . $filename_without_ext;
+        $target_dir = IMAGES_PATH . DIRECTORY_SEPARATOR . $subdir_path;
 
         $destination_path = $target_dir . DIRECTORY_SEPARATOR . $file_name;
 
@@ -66,11 +69,44 @@ class ImageModel {
             return false;
         }
 
+        try {
+            // Get the MongoDB database connection
+            $db = MongoDB::getInstance()->getDatabase();
+
+            // Select the collection (like a table in SQL). MongoDB creates it if it doesn't exist.
+            $collection = $db->images;
+
+            // Prepare the document to be inserted
+            $document = [
+                'title' => $metadata['title'],
+                'author' => $metadata['author'],
+                'folder' => $subdir_path, // The unique folder name for this image
+            ];
+
+            // Insert the document into the collection
+            $insertOneResult = $collection->insertOne($document);
+
+            // Optional: Check if the insert was acknowledged by the server
+            if ($insertOneResult->getInsertedCount() !== 1) {
+                // This is an unlikely but possible error state
+                $this->errors['database'] = 'Failed to save image metadata to the database.';
+                // Clean up by deleting the files you just created
+                // ... (cleanup logic would go here) ...
+                return false;
+            }
+
+        } catch (Exception $e) {
+            // If anything goes wrong with the database connection or insert
+            $this->errors['database'] = 'A database error occurred.';
+            // Clean up files here as well
+            return false;
+        }
+
 
         return true;
     }
 
-    private function createThumbnail($source_path, $destination_path) {
+    public function createThumbnail($source_path, $destination_path, $width=THUMB_WIDTH, $height=THUMB_HEIGHT) {
         list($source_width, $source_height, $source_type) = getimagesize($source_path);
 
         switch ($source_type) {
@@ -89,7 +125,7 @@ class ImageModel {
         }
 
         $source_aspect_ratio = $source_width / $source_height;
-        $thumb_aspect_ratio = THUMB_WIDTH / THUMB_HEIGHT;
+        $thumb_aspect_ratio = $width / $height;
 
         $crop_rect = ['x' => 0, 'y' => 0, 'width' => $source_width, 'height' => $source_height];
 
@@ -110,7 +146,7 @@ class ImageModel {
             return false;
         }
 
-        $thumb_image = imagecreatetruecolor(THUMB_WIDTH, THUMB_HEIGHT);
+        $thumb_image = imagecreatetruecolor($width, $height);
 
         if ($source_type == IMAGETYPE_PNG) {
             imagealphablending($thumb_image, false);
@@ -120,7 +156,7 @@ class ImageModel {
         imagecopyresampled(
             $thumb_image, $cropped_image,
             0, 0, 0, 0,
-            THUMB_WIDTH, THUMB_HEIGHT,
+            $width, $height,
             $crop_rect['width'], $crop_rect['height']
         );
 
@@ -139,6 +175,27 @@ class ImageModel {
         imagedestroy($thumb_image);
 
         return $success;
+    }
+
+    private function findByFolder($folderName) {
+        try {
+            // Get the MongoDB database connection
+            $db = MongoDB::getInstance()->getDatabase();
+            $collection = $db->images;
+
+            // Define the filter to find the document where the 'folder' field matches
+            $filter = ['folder' => $folderName];
+
+            // Use findOne() to get a single document. It returns null if not found.
+            $document = $collection->findOne($filter);
+
+            return $document;
+
+        } catch (Exception $e) {
+            // If the database connection fails, return null
+            $this->errors['database'] = 'A database error occurred.';
+            return null;
+        }
     }
 
     public function getAll($page = 1, $perPage = 4) {
@@ -161,6 +218,7 @@ class ImageModel {
                 foreach ($sub_iterator as $image_file_info) {
                     if ($image_file_info->isFile()) {
                         $filename = $image_file_info->getFilename();
+                        $metadata = $this->findByFolder($subdirectory_name);
                         if (strpos($filename, '_thumb.') !== false) {
                             $thumb_file = $filename;
                         } else {
@@ -172,7 +230,8 @@ class ImageModel {
                 if ($original_file && $thumb_file) {
                     $allImages[] = [
                         'original' => '/images/' . $subdirectory_name . '/' . $original_file,
-                        'thumb' => '/images/' . $subdirectory_name . '/' . $thumb_file
+                        'thumb' => '/images/' . $subdirectory_name . '/' . $thumb_file,
+                        'metadata' => $metadata
                     ];
                 }
             }
