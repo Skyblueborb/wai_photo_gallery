@@ -23,12 +23,13 @@ class UserController extends BaseController {
     public function handleRegister() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($this->userModel->create($_POST, $_FILES)) {
-                $this->redirect('/login'); // SUCCESS HANDLING
+                $this->redirect('/login', ['status' => 'success', 'code' => 'reg_success']);
             } else {
-                $this->redirect('/login'); // ERROR HANDLING
+                $this->errors = $this->userModel->getErrors();
+                $this->showRegister();
             }
         } else {
-            $this->redirect('/register'); // ERROR HANDLING
+            $this->redirect('/register');
         }
     }
 
@@ -48,10 +49,10 @@ class UserController extends BaseController {
 
                 $this->redirect('/');
             } else {
-                $this->redirect('/login'); // ERROR HANDLING
+                $this->errors = $this->userModel->getErrors();
+                $this->showLogin();
             }
         }
-        $this->redirect('/');
         exit;
     }
 

@@ -2,23 +2,10 @@
 $title = 'Register';
 include 'partials/header.php';
 ?>
-
-<!-- Message handling for login/register status -->
-<?php
-    $messageText = null;
-    $messageClass = '';
-    // ... (your existing message logic from GET params) ...
-?>
-<?php if ($messageText): ?>
-    <div class="message-box <?php echo $messageClass; ?>">
-        <p><?php echo htmlspecialchars($messageText); ?></p>
-    </div>
-<?php endif; ?>
-
 <div class="auth-container">
     <div class="form-wrapper">
         <h1>Register</h1>
-        <form action="/login" method="POST">
+        <form action="/register" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="reg_username">Username:</label>
                     <input type="text" id="reg_username" name="username" required>
@@ -43,5 +30,4 @@ include 'partials/header.php';
         </form>
     </div>
 </div>
-
 <?php include 'partials/footer.php'; ?>

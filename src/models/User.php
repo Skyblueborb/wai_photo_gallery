@@ -18,7 +18,7 @@ class UserModel {
         $passwordConfirm = $data['password_confirm'] ?? null;
         $profile_picture = $file['profile_picture'] ?? null;
 
-        if (empty($username) || empty($email) || empty($password) || empty($profile_picture)) {
+        if (empty($username) || empty($email) || empty($password) || empty($passwordConfirm) || empty($profile_picture)) {
             $this->errors['fields'] = 'All fields are required.';
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -80,10 +80,16 @@ class UserModel {
 
     public function verifyCredentials($username, $password) {
         $user = DatabaseUtils::getUser($username);
-        if (password_verify($password, $user['password'])) {
-            return $user;
+        if(!$user) {
+            $this->errors['username'] = 'This username does not exist.';
+            return false;
         }
-        return false;
+
+        if (!password_verify($password, $user['password'])) {
+            $this->errors['password'] = 'Incorrect password.';
+            return false;
+        }
+        return $user;
     }
 
     public function getErrors() {

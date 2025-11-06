@@ -23,7 +23,7 @@ class ImageUploadController extends BaseController {
                     $image = new ImageModel;
 
                     if($image->save($file, $metadata)) {
-                        $this->redirect('/');
+                        $this->redirect('/', ['status' => 'success', 'code' => 'upload_success']);
                     } else {
                         $this->errors = $image->getErrors();
                         $this->render('upload_form', ['errors' => $this->errors]);

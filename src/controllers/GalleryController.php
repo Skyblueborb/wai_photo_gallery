@@ -6,7 +6,7 @@ require_once BASE_PATH . 'models/Image.php';
 class GalleryController extends BaseController {
 
     public function index() {
-        $imagesPerPage = 4;
+        $imagesPerPage = 6;
 
         // Ensure page is always positive
         $currentPage = isset($_GET['page']) && (int)$_GET['page'] > 0 ? (int)$_GET['page'] : 1;

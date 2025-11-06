@@ -4,12 +4,12 @@
         <a href="/upload" class="nav-button">Upload</a>
     </div>
     <div class="nav-right">
-        <?php if ($isLoggedIn && $currentUser): ?>
+        <?php if ($isLoggedIn): ?>
             <div class="nav-profile">
-                <?php if (!empty($currentUser['profile_picture'])): ?>
-                    <img src="<?php echo htmlspecialchars($currentUser['profile_picture']); ?>" alt="Profile Picture">
+                <?php if (!empty($profile_picture)): ?>
+                    <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Profile Picture">
                 <?php endif; ?>
-                <span><?php echo htmlspecialchars($currentUser['username']); ?></span>
+                <span><?php echo htmlspecialchars($username); ?></span>
             </div>
             <a href="/logout" class="nav-button">Logout</a>
         <?php else: ?>

@@ -2,19 +2,6 @@
 $title = 'Login';
 include 'partials/header.php';
 ?>
-
-<!-- Message handling for login/register status -->
-<?php
-    $messageText = null;
-    $messageClass = '';
-    // ... (your existing message logic from GET params) ...
-?>
-<?php if ($messageText): ?>
-    <div class="message-box <?php echo $messageClass; ?>">
-        <p><?php echo htmlspecialchars($messageText); ?></p>
-    </div>
-<?php endif; ?>
-
 <div class="auth-container">
     <div class="form-wrapper">
         <h1>Login</h1>
@@ -32,5 +19,4 @@ include 'partials/header.php';
         <a href="/register" class="form-switch-link">Don't have an account? Register here</a>
     </div>
 </div>
-
 <?php include 'partials/footer.php'; ?>

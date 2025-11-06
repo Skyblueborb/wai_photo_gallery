@@ -37,8 +37,6 @@ nav {
 .nav-profile img {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
 }
 
 .nav-profile span {
@@ -129,21 +127,36 @@ button[type="submit"] {
   transform: scale(1.05);
 }
 
-.message-box {
+.floating-message-container {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 500px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.floating-message-box {
   padding: 1rem;
-  margin: 1rem 0;
-  border-radius: 4px;
+  border-radius: 5px;
   text-align: center;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
-.message-box.success {
+
+.floating-message-box.success {
+  background-color: rgba(40, 167, 69, 0.9);
   border: 1px solid #28a745;
-  background-color: #d4edda;
-  color: #155724;
 }
-.message-box.error {
+
+.floating-message-box.error {
+  background-color: rgba(220, 53, 69, 0.9);
   border: 1px solid #d9534f;
-  background-color: #f2dede;
-  color: #a94442;
 }
 
 .pagination {
