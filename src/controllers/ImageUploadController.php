@@ -7,7 +7,7 @@ require_once BASE_PATH . 'models/Image.php';
 
 class ImageUploadController extends BaseController {
     public function showForm() {
-        $this->render('upload_form', ['errors'  => []]);
+        $this->render('upload_form', ['errors' => $this->errors]);
     }
 
     public function handleUpload() {
@@ -16,17 +16,17 @@ class ImageUploadController extends BaseController {
                 if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
                     $file = $_FILES['image_file'];
                     $metadata = [
-                        'title' => $_POST['title'] ?? 'Untitled', // Use null-coalescing for safety
+                        'title' => $_POST['title'] ?? 'Untitled',
                         'author' => $_POST['author'] ?? 'Unknown'
                     ];
+
                     $image = new ImageModel;
 
                     if($image->save($file, $metadata)) {
-                        header("Location: /");
-                        exit;
+                        $this->redirect('/');
                     } else {
-                        $errors = $image->getErrors();
-                        $this->render('upload_form', ['errors' => $errors]);
+                        $this->errors = $image->getErrors();
+                        $this->render('upload_form', ['errors' => $this->errors]);
                     }
                 }
             } else {

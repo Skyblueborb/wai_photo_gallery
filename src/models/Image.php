@@ -7,7 +7,10 @@ define('IMAGES_PATH', BASE_PATH .  DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPAR
 define("THUMB_WIDTH", 200);
 define("THUMB_HEIGHT", 125);
 
+define('COLLECTION_NAME', 'images');
+
 require_once BASE_PATH . 'models/MongoDB.php';
+require_once BASE_PATH . 'models/DatabaseUtils.php';
 
 class ImageModel {
     private $errors = [];
@@ -18,6 +21,7 @@ class ImageModel {
         $allowed_extensions = ['jpg', 'png'];
         $allowed_mimetypes = ['image/png', 'image/jpeg'];
         $file_extension = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        $filename_without_ext = pathinfo($file_name, PATHINFO_FILENAME);
 
         if(!in_array($file_extension, $allowed_extensions) || !in_array($mimetype, $allowed_mimetypes)) {
             $this->errors['filetype'] = 'Disallowed filetype, you can only upload png/jpg.';
@@ -32,12 +36,10 @@ class ImageModel {
             return false;
         }
 
-
         $timestamp = time();
-        $filename_without_ext = pathinfo($file_name, PATHINFO_FILENAME);
-        $subdir_path = $timestamp . '_' . $filename_without_ext;
 
-        $target_dir = IMAGES_PATH . DIRECTORY_SEPARATOR . $subdir_path;
+        $folder_name = $timestamp . '_' . $filename_without_ext;
+        $target_dir = IMAGES_PATH . DIRECTORY_SEPARATOR . $folder_name;
 
         $destination_path = $target_dir . DIRECTORY_SEPARATOR . $file_name;
 
@@ -59,54 +61,27 @@ class ImageModel {
         $thumb_filename = $filename_without_ext . '_thumb.' . $file_extension;
         $thumb_destination_path = $target_dir . DIRECTORY_SEPARATOR . $thumb_filename;
 
-        $thumb_success = $this->createThumbnail(
-            $destination_path,
-            $thumb_destination_path,
-        );
-
-        if (!$thumb_success) {
+        if (!$this->createThumbnail($destination_path, $thumb_destination_path)) {
             $this->errors['thumbnail'] = 'Failed to create the image thumbnail.';
             return false;
         }
 
-        try {
-            // Get the MongoDB database connection
-            $db = MongoDB::getInstance()->getDatabase();
+        $document = [
+            'title' => $metadata['title'],
+            'author' => $metadata['author'],
+            'folder' => $folder_name,
+        ];
 
-            // Select the collection (like a table in SQL). MongoDB creates it if it doesn't exist.
-            $collection = $db->images;
 
-            // Prepare the document to be inserted
-            $document = [
-                'title' => $metadata['title'],
-                'author' => $metadata['author'],
-                'folder' => $subdir_path, // The unique folder name for this image
-            ];
-
-            // Insert the document into the collection
-            $insertOneResult = $collection->insertOne($document);
-
-            // Optional: Check if the insert was acknowledged by the server
-            if ($insertOneResult->getInsertedCount() !== 1) {
-                // This is an unlikely but possible error state
-                $this->errors['database'] = 'Failed to save image metadata to the database.';
-                // Clean up by deleting the files you just created
-                // ... (cleanup logic would go here) ...
-                return false;
-            }
-
-        } catch (Exception $e) {
-            // If anything goes wrong with the database connection or insert
-            $this->errors['database'] = 'A database error occurred.';
-            // Clean up files here as well
+        if (!DatabaseUtils::saveDocument($document, COLLECTION_NAME)) {
+            $this->errors['database'] = 'Failed to save image metadata.';
             return false;
         }
-
 
         return true;
     }
 
-    public function createThumbnail($source_path, $destination_path, $width=THUMB_WIDTH, $height=THUMB_HEIGHT) {
+    public static function createThumbnail($source_path, $destination_path, $width=THUMB_WIDTH, $height=THUMB_HEIGHT) {
         list($source_width, $source_height, $source_type) = getimagesize($source_path);
 
         switch ($source_type) {
@@ -177,28 +152,7 @@ class ImageModel {
         return $success;
     }
 
-    private function findByFolder($folderName) {
-        try {
-            // Get the MongoDB database connection
-            $db = MongoDB::getInstance()->getDatabase();
-            $collection = $db->images;
-
-            // Define the filter to find the document where the 'folder' field matches
-            $filter = ['folder' => $folderName];
-
-            // Use findOne() to get a single document. It returns null if not found.
-            $document = $collection->findOne($filter);
-
-            return $document;
-
-        } catch (Exception $e) {
-            // If the database connection fails, return null
-            $this->errors['database'] = 'A database error occurred.';
-            return null;
-        }
-    }
-
-    public function getAll($page = 1, $perPage = 4) {
+    public static function getAll($page = 1, $perPage = 4) {
         $allImages = [];
 
         if (!is_dir(IMAGES_PATH)) {
@@ -218,7 +172,7 @@ class ImageModel {
                 foreach ($sub_iterator as $image_file_info) {
                     if ($image_file_info->isFile()) {
                         $filename = $image_file_info->getFilename();
-                        $metadata = $this->findByFolder($subdirectory_name);
+                        $metadata = DatabaseUtils::findOne('folder',$subdirectory_name, COLLECTION_NAME);
                         if (strpos($filename, '_thumb.') !== false) {
                             $thumb_file = $filename;
                         } else {
@@ -237,19 +191,18 @@ class ImageModel {
             }
         }
 
-
         $totalImages = count($allImages);
 
-        // Calculate the starting offset for the array slice
         $offset = ($page - 1) * $perPage;
 
-        // Get the specific "slice" of the array for the current page
         $paginatedImages = array_slice($allImages, $offset, $perPage);
 
-        // Return both the images for the page and the total count
+        $totalPages = ceil($totalImages / $perPage);
+
         return [
             'images' => $paginatedImages,
-            'total' => $totalImages
+            'total' => $totalImages,
+            'totalPages' => $totalPages
         ];
     }
 
