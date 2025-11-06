@@ -16,7 +16,7 @@ class ImageModel {
     private $errors = [];
 
     public function save($image, $metadata) {
-        $file_name = basename($image['name']);
+        $file_name = $this->sanitizeFilename($image['name']);
         $mimetype = $image['type'];
         $allowed_extensions = ['jpg', 'png'];
         $allowed_mimetypes = ['image/png', 'image/jpeg'];
@@ -79,6 +79,23 @@ class ImageModel {
         }
 
         return true;
+    }
+
+    private function sanitizeFilename($filename) {
+        $filename = basename($filename);
+
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+
+        $nameWithoutExt = str_replace(' ', '_', $nameWithoutExt);
+
+        $nameWithoutExt = preg_replace('/[^a-zA-Z0-9_-]/', '', $nameWithoutExt);
+
+        if (empty($nameWithoutExt)) {
+            $nameWithoutExt = 'file_' . time();
+        }
+
+        return $nameWithoutExt . '.' . strtolower($extension);
     }
 
     public static function createThumbnail($source_path, $destination_path, $width=THUMB_WIDTH, $height=THUMB_HEIGHT) {
