@@ -7,7 +7,7 @@ define('IMAGES_PATH', BASE_PATH .  DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPAR
 define("THUMB_WIDTH", 200);
 define("THUMB_HEIGHT", 125);
 
-define('COLLECTION_NAME', 'images');
+define('IMAGES_COLLECTION', 'images');
 
 require_once BASE_PATH . 'models/MongoDB.php';
 require_once BASE_PATH . 'models/DatabaseUtils.php';
@@ -73,7 +73,7 @@ class ImageModel {
         ];
 
 
-        if (!DatabaseUtils::saveDocument($document, COLLECTION_NAME)) {
+        if (!DatabaseUtils::saveDocument($document, IMAGES_COLLECTION)) {
             $this->errors['database'] = 'Failed to save image metadata.';
             return false;
         }
@@ -172,7 +172,7 @@ class ImageModel {
                 foreach ($sub_iterator as $image_file_info) {
                     if ($image_file_info->isFile()) {
                         $filename = $image_file_info->getFilename();
-                        $metadata = DatabaseUtils::findOne('folder',$subdirectory_name, COLLECTION_NAME);
+                        $metadata = DatabaseUtils::findOne('folder',$subdirectory_name, IMAGES_COLLECTION);
                         if (strpos($filename, '_thumb.') !== false) {
                             $thumb_file = $filename;
                         } else {
@@ -201,7 +201,6 @@ class ImageModel {
 
         return [
             'images' => $paginatedImages,
-            'total' => $totalImages,
             'totalPages' => $totalPages
         ];
     }

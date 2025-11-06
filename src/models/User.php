@@ -5,7 +5,7 @@ require_once BASE_PATH . 'models/Image.php';
 require_once BASE_PATH . 'models/DatabaseUtils.php';
 
 define('PFP_PATH', BASE_PATH . DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPARATOR . 'ProfilesFoto');
-define('COLLECTION_NAME', 'users');
+define('USERS_COLLECTION', 'users');
 
 
 class UserModel {
@@ -15,6 +15,7 @@ class UserModel {
         $username = $data['username'] ?? null;
         $email = $data['email'] ?? null;
         $password = $data['password'] ?? null;
+        $passwordConfirm = $data['password_confirm'] ?? null;
         $profile_picture = $file['profile_picture'] ?? null;
 
         if (empty($username) || empty($email) || empty($password) || empty($profile_picture)) {
@@ -23,11 +24,14 @@ class UserModel {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->errors['email'] = 'A valid email address is required.';
         }
+        if ($password !== $passwordConfirm) {
+            $this->errors['password_match'] = 'The passwords do not match.';
+        }
 
-        if (DataBaseUtils::findOne('username', $username, COLLECTION_NAME)) {
+        if (DataBaseUtils::findOne('username', $username, USERS_COLLECTION)) {
             $this->errors['username'] = 'This username is already taken.';
         }
-        if (DatabaseUtils::findOne('email', $email , COLLECTION_NAME)) {
+        if (DatabaseUtils::findOne('email', $email , USERS_COLLECTION)) {
             $this->errors['email_taken'] = 'An account with this email already exists.';
         }
 

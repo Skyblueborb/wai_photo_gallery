@@ -66,15 +66,7 @@ class DatabaseUtils {
     }
 
     public static function getUser($username) {
-        try {
-            $user = self::$user_collection->findOne(['username' => $username]);
-            if(!$user) {
-                return null;
-            }
-
-        } catch (Exception) {
-            return null;
-        }
+        $user = self::findOne('username', $username, 'users');
         return $user;
     }
 }
