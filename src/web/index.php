@@ -1,12 +1,10 @@
 <?php
+session_start();
 
 define("BASE_PATH", __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR);
 
 require_once BASE_PATH . 'routing.php';
 require_once BASE_PATH . DIRECTORY_SEPARATOR . 'models' . DIRECTORY_SEPARATOR . 'DatabaseUtils.php';
-
-//aspekty globalne
-session_start();
 
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $requestMethod = $_SERVER['REQUEST_METHOD'];
