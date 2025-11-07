@@ -17,8 +17,8 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <?php if (!empty($messages['error'])): ?>
-        <?php foreach ($messages['error'] as $message): ?>
+    <?php if (!empty($messages['errors'])): ?>
+        <?php foreach ($messages['errors'] as $message): ?>
             <div class="floating-message-box error">
                 <?php echo htmlspecialchars($message); ?>
             </div>

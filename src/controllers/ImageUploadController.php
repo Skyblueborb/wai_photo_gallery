@@ -21,18 +21,22 @@ class ImageUploadController extends BaseController {
                         'type' => $_POST['type'] ?? 'Unknown'
                     ];
 
+                    if (!$this->isAuthenticated() && $metadata['type'] == 'private') {
+                        $this->redirect('/upload', ['errors' => ['Registered users are only allowed to upload private images.']]);
+                    }
+
                     $image = new ImageModel;
 
                     if($image->save($file, $metadata)) {
-                        $this->redirect('/', ['status' => 'success', 'code' => 'upload_success']);
+                        $this->redirect('/', ['success' => ['upload_success' => 'Your image was uploaded successfully'], 'errors' => $this->errors]);
                     } else {
                         $this->errors = $image->getErrors();
-                        $this->render('upload_form', ['errors' => $this->errors]);
+                        $this->redirect('/upload', ['errors' => $this->errors]);
                     }
                 }
             } else {
                 $errors = ['upload' => 'There was a problem with the upload. Please try again.'];
-                $this->render('upload_form', ['errors' => $errors]);
+                $this->redirect('/upload', ['errors' => $errors]);
             }
         }
     }

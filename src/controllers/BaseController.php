@@ -1,38 +1,47 @@
 <?php
 
+require_once BASE_PATH . 'models/DatabaseUtils.php';
+
 class BaseController
 {
     protected $errors = [];
 
     protected function isAuthenticated() {
-        return isset($_SESSION['user_id']);
+        if(!isset($_SESSION['username'], $_SESSION['session_token'])) return false;
+        $user = DatabaseUtils::getUser($_SESSION['username']);
+        if(!$user) return false;
+
+        $expected_hash = hash('sha256', $user['password'] . session_id());
+
+        if(hash_equals($expected_hash, $_SESSION['session_token'])) {
+            return true;
+        } else {
+            $cookieParams = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $cookieParams['path'],
+                $cookieParams['domain'],
+                $cookieParams['secure'],
+                $cookieParams['httponly']
+            );
+            session_destroy();
+            return false;
+        }
     }
 
     protected function render($view_name, $data = [])
     {
-        $statusMessages = [
-            'success' => [
-                'reg_success' => 'Registration successful! You can now log in.',
-                'upload_success' => 'Your image was uploaded successfully!',
-            ],
-            'error' => [
-                'default' => 'An unknown error occurred.'
-            ]
-        ];
-        $messages = ['success' => [], 'error' => []];
+        $messages = ['success' => [], 'errors' => []];
 
-        if (isset($_GET['status']) && isset($_GET['code'])) {
-            $status = $_GET['status'];
-            $code = $_GET['code'];
-            if (isset($statusMessages[$status][$code])) {
-                $messages[$status][] = $statusMessages[$status][$code];
-            } else {
-                $messages['error'][] = $statusMessages['error']['default'];
-            }
+        if (isset($_SESSION['flash_messages'])) {
+            $messages = array_merge_recursive($messages, $_SESSION['flash_messages']);
+            unset($_SESSION['flash_messages']);
         }
 
         if (isset($data['errors']) && is_array($data['errors'])) {
-            $messages['error'] = array_merge($messages['error'], $data['errors']);
+            $messages['errors'] = array_merge($messages['errors'], $data['errors']);
             unset($data['errors']);
         }
 
@@ -43,9 +52,9 @@ class BaseController
         include BASE_PATH . 'views/' . $view_name . '.php';
     }
 
-    protected function redirect($url, $queryParams = []) {
-        if (!empty($queryParams)) {
-            $url .= '?' . http_build_query($queryParams);
+    protected function redirect($url, $flashMessages = []) {
+        if (!empty($flashMessages)) {
+            $_SESSION['flash_messages'] = $flashMessages;
         }
 
         header("Location: " . $url);

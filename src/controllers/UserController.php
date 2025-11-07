@@ -13,20 +13,22 @@ class UserController extends BaseController {
     }
 
     public function showLogin() {
+        if($this->isAuthenticated()) $this->redirect('/');
         $this->render('login', ['errors' => $this->errors]);
     }
 
     public function showRegister() {
+        if($this->isAuthenticated()) $this->redirect('/');
         $this->render('register', ['errors' => $this->errors]);
     }
 
     public function handleRegister() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($this->userModel->create($_POST, $_FILES)) {
-                $this->redirect('/login', ['status' => 'success', 'code' => 'reg_success']);
+                $this->redirect('/login', ['success' => ['reg_success' => 'Registration successful! You can now log in.'], 'errors' => $this->errors]);
             } else {
                 $this->errors = $this->userModel->getErrors();
-                $this->showRegister();
+                $this->redirect('/register', ['errors' => $this->errors]);
             }
         } else {
             $this->redirect('/register');
@@ -44,13 +46,14 @@ class UserController extends BaseController {
                 session_regenerate_id(true);
 
                 $_SESSION['user_id'] = (string)$user['_id'];
+                $_SESSION['session_token'] = hash('sha256', $user['password'] . session_id());
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['profile_picture'] = DIRECTORY_SEPARATOR . 'ProfilesFoto' . DIRECTORY_SEPARATOR . $user['profile_picture'];
 
                 $this->redirect('/');
             } else {
                 $this->errors = $this->userModel->getErrors();
-                $this->showLogin();
+                $this->redirect('/login', ['errors' => $this->errors]);
             }
         }
         exit;
