@@ -2,6 +2,7 @@
     <div class="nav-left">
         <a href="/" style="text-decoration: none; color: inherit; font-weight: bold; font-size: 1.2rem;">Gallery</a>
         <a href="/upload" class="nav-button">Upload</a>
+        <a href="/saved" class="nav-button">Saved photos</a>
     </div>
     <div class="nav-right">
         <?php if ($isLoggedIn): ?>

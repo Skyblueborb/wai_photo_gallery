@@ -169,7 +169,7 @@ class ImageModel {
         return $success;
     }
 
-    public static function getAll($page = 1, $perPage = 4) {
+    public static function getAll($page = 1, $perPage = 4, $filterFolders = null) {
         $allImages = [];
 
         if (!is_dir(IMAGES_PATH)) {
@@ -184,6 +184,10 @@ class ImageModel {
                 $subdirectory_name = $fileinfo->getFilename();
                 $original_file = null;
                 $thumb_file = null;
+
+                if ($filterFolders !== null && !in_array($subdirectory_name, $filterFolders)) {
+                    continue;
+                }
 
                 $sub_iterator = new DirectoryIterator($subdirectory_path);
                 foreach ($sub_iterator as $image_file_info) {
@@ -202,6 +206,7 @@ class ImageModel {
                     $allImages[] = [
                         'original' => '/images/' . $subdirectory_name . '/' . $original_file,
                         'thumb' => '/images/' . $subdirectory_name . '/' . $thumb_file,
+                        'id' => $subdirectory_name,
                         'metadata' => $metadata
                     ];
                 }

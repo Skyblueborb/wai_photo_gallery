@@ -16,7 +16,7 @@ $requestMethod = $_SERVER['REQUEST_METHOD'];
 DatabaseUtils::init();
 
 $router = new Router();
-$router->addRoute('GET', '/', 'GalleryController', 'index');
+$router->addRoute('GET', '/', 'GalleryController', 'showGallery');
 $router->addRoute('GET', '/upload', 'ImageUploadController', 'showForm');
 $router->addRoute('POST', '/upload', 'ImageUploadController', 'handleUpload');
 
@@ -26,6 +26,11 @@ $router->addRoute('GET', '/logout', 'UserController', 'logout');
 $router->addRoute('GET', '/register', 'UserController', 'showRegister');
 $router->addRoute('POST', '/login', 'UserController', 'handleLogin');
 $router->addRoute('POST', '/register', 'UserController','handleRegister');
+
+# Saved images
+$router->addRoute('GET', '/saved', 'GalleryController', 'showSaved');
+$router->addRoute('POST', '/save', 'GalleryController', 'handleSavedForm');
+
 
 // Dispatch the request
 $router->dispatch($requestMethod, $requestUri);
