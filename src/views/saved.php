@@ -19,6 +19,7 @@ include 'partials/header.php';
                     </a>
                     <a> Title: <?php echo htmlspecialchars($image['metadata']['title']); ?> </a>
                     <a> Author: <?php echo htmlspecialchars($image['metadata']['author']); ?> </a>
+                    <a> Visibility: <?php echo htmlspecialchars($image['metadata']['type']); ?> </a>
                     <input type="checkbox" name="selected_images[]" value="<?php echo htmlspecialchars($image['id']); ?>">
                     <input type="number" name="quantity[<?php echo htmlspecialchars($image['id']); ?>]" value="<?php echo htmlspecialchars($saved_images[$image['id']] ?? 1); ?>" min="1" max="99" style="width: 50px;">
                 </div>

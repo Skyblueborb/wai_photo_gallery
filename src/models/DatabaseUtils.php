@@ -55,14 +55,36 @@ class DatabaseUtils {
 
         $filter = [$key => $query];
         try {
-            $filter = [$key => $query];
-
             $document = $target_collection->findOne($filter);
 
             return $document;
         } catch (Exception) {
             return null;
         }
+    }
+
+    public static function getLoggedInPhotos($username) {
+        $target_collection = self::$image_collection;
+        if ($target_collection === null) {
+            return false;
+        }
+
+        $query = [
+            '$or' => [
+                ['type' => 'public'],
+                ['author' => $username, 'type' => 'private']
+            ]
+        ];
+
+        try {
+            $cursor = $target_collection->find($query);
+
+            return $cursor->toArray();
+        } catch (Exception $e) {
+            echo $e;
+            return null;
+        }
+
     }
 
     public static function getUser($username) {

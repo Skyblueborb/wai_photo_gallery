@@ -14,15 +14,16 @@ class GalleryController extends BaseController {
 
         $imageData = ImageModel::getAll($currentPage, $imagesPerPage);
 
-        $images = $imageData['images'];
-        $totalPages = $imageData['totalPages'];
-        $totalPhotos = array_sum($_SESSION['saved_images']);
-
         if(isset($_SESSION['saved_images'])) {
             $saved_images = $_SESSION['saved_images'];
         } else {
+            $_SESSION['saved_images'] = [];
             $saved_images = [];
         }
+
+        $images = $imageData['images'];
+        $totalPages = $imageData['totalPages'];
+        $totalPhotos = array_sum($_SESSION['saved_images']);
 
         $this->render('gallery', [
             'images' => $images,
@@ -39,6 +40,13 @@ class GalleryController extends BaseController {
         // Ensure page is always positive
         $currentPage = isset($_GET['page']) && (int)$_GET['page'] > 0 ? (int)$_GET['page'] : 1;
 
+        if(isset($_SESSION['saved_images'])) {
+            $saved_images = $_SESSION['saved_images'];
+        } else {
+            $_SESSION['saved_images'] = [];
+            $saved_images = [];
+        }
+
         $filterFolders = array_keys($_SESSION['saved_images']);
         $totalPhotos = array_sum($_SESSION['saved_images']);
 
@@ -46,12 +54,6 @@ class GalleryController extends BaseController {
 
         $images = $imageData['images'];
         $totalPages = $imageData['totalPages'];
-
-        if(isset($_SESSION['saved_images'])) {
-            $saved_images = $_SESSION['saved_images'];
-        } else {
-            $saved_images = [];
-        }
 
         $this->render('saved', [
             'images' => $images,

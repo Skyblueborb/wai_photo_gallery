@@ -66,9 +66,38 @@ class ImageModel {
             return false;
         }
 
+        $author = trim(strip_tags($metadata['author'] ?? ''));
+        if (mb_strlen($author) > 64) {
+            $author = mb_substr($author, 0, 64);
+        }
+        if (empty($author)) {
+            $this->errors['author'] = 'Author cannot be empty.';
+        }
+
+        $title = trim(strip_tags($metadata['title'] ?? ''));
+        if (mb_strlen($title) > 64) {
+            $title = mb_substr($title, 0, 64);
+        }
+        if (empty($title)) {
+            $this->errors['title'] = 'Title cannot be empty.';
+        }
+
+        $type = $metadata['type'] ?? 'public';
+        if (!in_array($type, ['public', 'private'])) {
+            $type = 'public';
+        }
+
+        if (!empty($this->errors)) {
+            return false;
+        }
+
+        $uploadUser = $_SESSION['username'] ?? null;
+
         $document = [
-            'title' => $metadata['title'],
-            'author' => $metadata['author'],
+            'title' => $title,
+            'author' => $author,
+            'owner' => $uploadUser,
+            'type' => $type,
             'folder' => $folder_name,
         ];
 
@@ -170,8 +199,16 @@ class ImageModel {
     }
 
     public static function getAll($page = 1, $perPage = 4, $filterFolders = null) {
-        $allImages = [];
+        $username = $_SESSION['username'] ?? null;
 
+        $visibleDocs = DatabaseUtils::getLoggedInPhotos($username);
+
+        $visibleFolders = [];
+        foreach ($visibleDocs as $doc) {
+            $visibleFolders[$doc['folder']] = $doc;
+        }
+
+        $allImages = [];
         if (!is_dir(IMAGES_PATH)) {
             return ['images' => [], 'total' => 0];
         }
@@ -180,20 +217,23 @@ class ImageModel {
 
         foreach ($iterator as $fileinfo) {
             if ($fileinfo->isDir() && !$fileinfo->isDot()) {
-                $subdirectory_path = $fileinfo->getPathname();
+
                 $subdirectory_name = $fileinfo->getFilename();
-                $original_file = null;
-                $thumb_file = null;
+
+                if (!isset($visibleFolders[$subdirectory_name])) {
+                    continue;
+                }
 
                 if ($filterFolders !== null && !in_array($subdirectory_name, $filterFolders)) {
                     continue;
                 }
 
-                $sub_iterator = new DirectoryIterator($subdirectory_path);
+                $original_file = null;
+                $thumb_file = null;
+                $sub_iterator = new DirectoryIterator($fileinfo->getPathname());
                 foreach ($sub_iterator as $image_file_info) {
                     if ($image_file_info->isFile()) {
                         $filename = $image_file_info->getFilename();
-                        $metadata = DatabaseUtils::findOne('folder',$subdirectory_name, IMAGES_COLLECTION);
                         if (strpos($filename, '_thumb.') !== false) {
                             $thumb_file = $filename;
                         } else {
@@ -203,6 +243,8 @@ class ImageModel {
                 }
 
                 if ($original_file && $thumb_file) {
+                    $metadata = $visibleFolders[$subdirectory_name];
+
                     $allImages[] = [
                         'original' => '/images/' . $subdirectory_name . '/' . $original_file,
                         'thumb' => '/images/' . $subdirectory_name . '/' . $thumb_file,
@@ -214,9 +256,7 @@ class ImageModel {
         }
 
         $totalImages = count($allImages);
-
         $offset = ($page - 1) * $perPage;
-
         $paginatedImages = array_slice($allImages, $offset, $perPage);
 
         $totalPages = ceil($totalImages / $perPage);

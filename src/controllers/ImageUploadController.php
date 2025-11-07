@@ -17,7 +17,8 @@ class ImageUploadController extends BaseController {
                     $file = $_FILES['image_file'];
                     $metadata = [
                         'title' => $_POST['title'] ?? 'Untitled',
-                        'author' => $_POST['author'] ?? 'Unknown'
+                        'author' => $_POST['author'] ?? 'Unknown',
+                        'type' => $_POST['type'] ?? 'Unknown'
                     ];
 
                     $image = new ImageModel;
