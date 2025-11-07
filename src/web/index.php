@@ -8,7 +8,6 @@ require_once BASE_PATH . DIRECTORY_SEPARATOR . 'models' . DIRECTORY_SEPARATOR . 
 //aspekty globalne
 session_start();
 
-// Get the requested URI and method
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 

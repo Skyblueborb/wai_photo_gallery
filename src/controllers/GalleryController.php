@@ -5,63 +5,52 @@ require_once BASE_PATH . 'models/Image.php';
 
 class GalleryController extends BaseController {
 
+
     public function showGallery() {
-        $imagesPerPage = 6;
+        $galleryData = $this->prepareGalleryData(false);
 
-        // Ensure page is always positive
-        $currentPage = isset($_GET['page']) && (int)$_GET['page'] > 0 ? (int)$_GET['page'] : 1;
-
-
-        $imageData = ImageModel::getAll($currentPage, $imagesPerPage);
-
-        if(isset($_SESSION['saved_images'])) {
-            $saved_images = $_SESSION['saved_images'];
-        } else {
-            $_SESSION['saved_images'] = [];
-            $saved_images = [];
-        }
-
-        $images = $imageData['images'];
-        $totalPages = $imageData['totalPages'];
-        $totalPhotos = array_sum($_SESSION['saved_images']);
-
-        $this->render('gallery', [
-            'images' => $images,
-            'currentPage' => $currentPage,
-            'totalPages' => $totalPages,
-            'saved_images' => $saved_images,
-            'totalPhotos' => $totalPhotos
-        ]);
+        $this->render('gallery', $galleryData);
     }
 
     public function showSaved() {
-        $imagesPerPage = 6;
+        $galleryData = $this->prepareGalleryData(true);
 
-        // Ensure page is always positive
+        $this->render('saved', $galleryData);
+    }
+
+    private function prepareGalleryData($filterBySaved = false) {
+        $imagesPerPage = 5;
+
         $currentPage = isset($_GET['page']) && (int)$_GET['page'] > 0 ? (int)$_GET['page'] : 1;
 
-        if(isset($_SESSION['saved_images'])) {
-            $saved_images = $_SESSION['saved_images'];
-        } else {
-            $_SESSION['saved_images'] = [];
-            $saved_images = [];
-        }
+        $saved_images = $_SESSION['saved_images'] ?? [];
 
-        $filterFolders = array_keys($_SESSION['saved_images']);
-        $totalPhotos = array_sum($_SESSION['saved_images']);
+        $filterFolders = null;
+        if ($filterBySaved) {
+            $filterFolders = array_keys($saved_images);
+
+            if (empty($filterFolders)) {
+                return [
+                    'images' => [],
+                    'currentPage' => 1,
+                    'totalPages' => 0,
+                    'saved_images' => [],
+                    'totalPhotos' => 0
+                ];
+            }
+        }
 
         $imageData = ImageModel::getAll($currentPage, $imagesPerPage, $filterFolders);
 
-        $images = $imageData['images'];
-        $totalPages = $imageData['totalPages'];
+        $totalPhotos = array_sum($saved_images);
 
-        $this->render('saved', [
-            'images' => $images,
+        return [
+            'images' => $imageData['images'],
             'currentPage' => $currentPage,
-            'totalPages' => $totalPages,
+            'totalPages' => $imageData['totalPages'],
             'saved_images' => $saved_images,
             'totalPhotos' => $totalPhotos
-        ]);
+        ];
     }
 
     public function handleSavedForm() {
@@ -77,13 +66,13 @@ class GalleryController extends BaseController {
                         $_SESSION['saved_images'][$folder] = $quantity;
                     }
                 break;
-            case 'remove':
-                foreach ($selectedFolders as $folder) {
-                    unset($_SESSION['saved_images'][$folder]);
-                }
+                case 'remove':
+                    foreach ($selectedFolders as $folder) {
+                        unset($_SESSION['saved_images'][$folder]);
+                    }
                 break;
+            }
         }
-    }
-    $this->redirect('/saved');
+        $this->redirect('/saved');
     }
 }

@@ -19,18 +19,28 @@ class SearchController extends BaseController {
 
         $formattedResults = [];
         foreach ($rawResults as $doc) {
-            $folder = $doc['folder'];
-            $image = ImageModel::getAll(1,1,[$folder])['images'][0];
+            $subdir = $doc['folder'];
+            $orig_name = $subdir . '.' . $doc['extension'];
+            $thumb_name = $subdir . '_thumb.' . $doc['extension'];
+
+            $orig_path = DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . $subdir . DIRECTORY_SEPARATOR . $orig_name;
+            $thumb_path = DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . $subdir . DIRECTORY_SEPARATOR . $thumb_name;
+
+            $metadata = [
+                'author' => $doc['author'],
+                'title' => $doc['title'],
+                'type' => $doc['type']
+            ];
+
             $formattedResults[] = [
-                'original' => $image['original'],
-                'thumb' => $image['thumb'],
-                'metadata' => $image['metadata']
+                'original' => $orig_path,
+                'thumb' => $thumb_path,
+                'metadata' => $metadata
             ];
         }
 
-        // Set the content type header to JSON and echo the encoded results
         header('Content-Type: application/json');
         echo json_encode($formattedResults);
-        exit; // Terminate the script
+        exit;
     }
 }

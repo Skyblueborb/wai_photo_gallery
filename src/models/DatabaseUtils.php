@@ -25,7 +25,6 @@ class DatabaseUtils {
             case 'users':
                 return self::$user_collection;
             default:
-                // Return null if an invalid collection name is requested
                 return null;
         }
     }
@@ -39,7 +38,6 @@ class DatabaseUtils {
 
         try {
             $insertOneResult = $target_collection->insertOne($document);
-
             return $insertOneResult->getInsertedCount() === 1;
         } catch (Exception) {
             return false;
@@ -63,30 +61,6 @@ class DatabaseUtils {
         }
     }
 
-    public static function getLoggedInPhotos($username) {
-        $target_collection = self::$image_collection;
-        if ($target_collection === null) {
-            return false;
-        }
-
-        $query = [
-            '$or' => [
-                ['type' => 'public'],
-                ['author' => $username, 'type' => 'private']
-            ]
-        ];
-
-        try {
-            $cursor = $target_collection->find($query);
-
-            return $cursor->toArray();
-        } catch (Exception $e) {
-            echo $e;
-            return null;
-        }
-
-    }
-
     public static function searchImagesByTitle($searchTerm, $username) {
         // i option means case insensitive.
         $titleFilter = [
@@ -100,7 +74,7 @@ class DatabaseUtils {
             $visibilityFilter = [
                 '$or' => [
                     ['type' => 'public'],
-                    ['author' => $username, 'type' => 'private'] // You can see public OR your own
+                    ['author' => $username, 'type' => 'private']
                 ]
             ];
         }
@@ -112,16 +86,50 @@ class DatabaseUtils {
             ]
         ];
 
-
         try {
             $imagesCollection = self::getCollection('images');
             if (!$imagesCollection) return [];
 
-            // Execute the query and return the results as an array.
-            return $imagesCollection->find($finalFilter)->toArray(); // Limit to 20 results for performance
+            return $imagesCollection->find($finalFilter)->toArray();
 
         } catch (Exception) {
             return [];
+        }
+    }
+
+    public static function getVisiblePhotosPaginated($username, $page, $perPage) {
+        $filter = ['type' => 'public'];
+
+        if ($username !== null) {
+            $filter = [
+                '$or' => [
+                    ['type' => 'public'],
+                    ['author' => $username, 'type' => 'private']
+                ]
+            ];
+        }
+
+        try {
+            $imagesCollection = self::getCollection('images');
+            if (!$imagesCollection) return ['documents' => [], 'total' => 0];
+
+            $total = $imagesCollection->countDocuments($filter);
+
+            $options = [
+                'sort' => ['_id' => -1],
+                'skip' => ($page - 1) * $perPage,
+                'limit' => $perPage
+            ];
+
+            $cursor = $imagesCollection->find($filter, $options);
+
+            return [
+                'documents' => $cursor->toArray(),
+                'total' => $total
+            ];
+
+        } catch (Exception) {
+            return ['documents' => [], 'total' => 0];
         }
     }
 

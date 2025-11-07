@@ -2,7 +2,7 @@
 
 define('ONE_MB', 1024 * 1024);
 
-define('IMAGES_PATH', BASE_PATH .  DIRECTORY_SEPARATOR . 'web' . DIRECTORY_SEPARATOR .'images');
+define('IMAGES_PATH', BASE_PATH . 'web' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR);
 
 define("THUMB_WIDTH", 200);
 define("THUMB_HEIGHT", 125);
@@ -39,9 +39,10 @@ class ImageModel {
         $timestamp = time();
 
         $folder_name = $timestamp . '_' . $filename_without_ext;
-        $target_dir = IMAGES_PATH . DIRECTORY_SEPARATOR . $folder_name;
+        $target_dir = IMAGES_PATH . $folder_name;
+        $final_filename = $timestamp . '_' . $file_name;
 
-        $destination_path = $target_dir . DIRECTORY_SEPARATOR . $file_name;
+        $destination_path = $target_dir . DIRECTORY_SEPARATOR . $final_filename;
 
         if (!is_dir($target_dir)) {
             if (!mkdir($target_dir, 0755, true)) {
@@ -57,8 +58,7 @@ class ImageModel {
             return false;
         }
 
-
-        $thumb_filename = $filename_without_ext . '_thumb.' . $file_extension;
+        $thumb_filename = $timestamp . '_' . $filename_without_ext . '_thumb.' . $file_extension;
         $thumb_destination_path = $target_dir . DIRECTORY_SEPARATOR . $thumb_filename;
 
         if (!$this->createThumbnail($destination_path, $thumb_destination_path)) {
@@ -99,6 +99,7 @@ class ImageModel {
             'owner' => $uploadUser,
             'type' => $type,
             'folder' => $folder_name,
+            'extension' => $file_extension
         ];
 
 
@@ -201,68 +202,41 @@ class ImageModel {
     public static function getAll($page = 1, $perPage = 4, $filterFolders = null) {
         $username = $_SESSION['username'] ?? null;
 
-        $visibleDocs = DatabaseUtils::getLoggedInPhotos($username);
+        $dbResult = DatabaseUtils::getVisiblePhotosPaginated($username, $page, $perPage);
 
-        $visibleFolders = [];
+        $visibleDocs = $dbResult['documents'];
+        $totalImages = $dbResult['total'];
+
+        $formattedImages = [];
         foreach ($visibleDocs as $doc) {
-            $visibleFolders[$doc['folder']] = $doc;
-        }
+            $folder = $doc['folder'];
+            $extension = $doc['extension'];
 
-        $allImages = [];
-        if (!is_dir(IMAGES_PATH)) {
-            return ['images' => [], 'total' => 0];
-        }
-
-        $iterator = new DirectoryIterator(IMAGES_PATH);
-
-        foreach ($iterator as $fileinfo) {
-            if ($fileinfo->isDir() && !$fileinfo->isDot()) {
-
-                $subdirectory_name = $fileinfo->getFilename();
-
-                if (!isset($visibleFolders[$subdirectory_name])) {
-                    continue;
-                }
-
-                if ($filterFolders !== null && !in_array($subdirectory_name, $filterFolders)) {
-                    continue;
-                }
-
-                $original_file = null;
-                $thumb_file = null;
-                $sub_iterator = new DirectoryIterator($fileinfo->getPathname());
-                foreach ($sub_iterator as $image_file_info) {
-                    if ($image_file_info->isFile()) {
-                        $filename = $image_file_info->getFilename();
-                        if (strpos($filename, '_thumb.') !== false) {
-                            $thumb_file = $filename;
-                        } else {
-                            $original_file = $filename;
-                        }
-                    }
-                }
-
-                if ($original_file && $thumb_file) {
-                    $metadata = $visibleFolders[$subdirectory_name];
-
-                    $allImages[] = [
-                        'original' => '/images/' . $subdirectory_name . '/' . $original_file,
-                        'thumb' => '/images/' . $subdirectory_name . '/' . $thumb_file,
-                        'id' => $subdirectory_name,
-                        'metadata' => $metadata
-                    ];
-                }
+            if(isset($filterFolders) && !in_array($folder, $filterFolders)) {
+                continue;
             }
-        }
 
-        $totalImages = count($allImages);
-        $offset = ($page - 1) * $perPage;
-        $paginatedImages = array_slice($allImages, $offset, $perPage);
+            $original_file = $folder . '.' . $extension;
+            $thumb_file = $folder . '_thumb.' . $extension;
+
+            $metadata = [
+                'title' => $doc['title'],
+                'author' => $doc['author'],
+                'type' => $doc['type']
+            ];
+
+            $formattedImages[] = [
+                'original' => '/images/' . $folder . '/' . $original_file,
+                'thumb' => '/images/' . $folder . '/' . $thumb_file,
+                'id' => $folder,
+                'metadata' => $metadata
+            ];
+        }
 
         $totalPages = ceil($totalImages / $perPage);
 
         return [
-            'images' => $paginatedImages,
+            'images' => $formattedImages,
             'totalPages' => $totalPages
         ];
     }

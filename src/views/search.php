@@ -11,16 +11,13 @@ include 'partials/header.php';
     </div>
 
     <div id="results-container" class="gallery-container">
-        <!-- Search results will be dynamically inserted here -->
     </div>
 </div>
 
 <script>
-    // Get references to the HTML elements
     const searchInput = document.getElementById('search-input');
     const resultsContainer = document.getElementById('results-container');
 
-    // Listen for the 'input' event on the search box
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.trim();
 
@@ -29,27 +26,22 @@ include 'partials/header.php';
             return;
         }
 
-        // Use the Fetch API to send a request to our server
         fetch(`/search/ajax?q=${encodeURIComponent(searchTerm)}`)
-            .then(response => response.json()) // Parse the JSON response
+            .then(response => response.json())
             .then(data => {
-                // Clear any previous results
                 resultsContainer.innerHTML = '';
 
-                // If no results were returned, show a message
                 if (data.length === 0) {
                     resultsContainer.innerHTML = '<p class="no-images">No images found.</p>';
                     return;
                 }
 
-                // Loop through the results and build the HTML for each image
                 data.forEach(image => {
                     const itemHtml = `
                         <div class="gallery-item">
-
-                        <a href="${image.original}" target="_blank">
-                            <img src="${image.thumb}" alt="Thumbnail">
-                        </a>
+                            <a href="${image.original}" target="_blank">
+                                <img src="${image.thumb}" alt="Thumbnail">
+                            </a>
                             <div class="gallery-item-info">
                                 <a>Title: ${image.metadata.title}</a>
                                 <a>Author: ${image.metadata.author}</a>
