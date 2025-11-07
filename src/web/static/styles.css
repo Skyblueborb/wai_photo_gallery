@@ -196,3 +196,16 @@ button[type="submit"] {
 .pagination span.disabled {
   color: #ccc;
 }
+
+.search-page-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.search-box input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  margin-bottom: 2rem;
+}

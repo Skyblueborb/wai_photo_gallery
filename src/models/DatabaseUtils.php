@@ -87,6 +87,44 @@ class DatabaseUtils {
 
     }
 
+    public static function searchImagesByTitle($searchTerm, $username) {
+        // i option means case insensitive.
+        $titleFilter = [
+            'title' => [
+                '$regex' => $searchTerm,
+                '$options' => 'i'
+            ]
+        ];
+        $visibilityFilter = ['type' => 'public'];
+        if ($username) {
+            $visibilityFilter = [
+                '$or' => [
+                    ['type' => 'public'],
+                    ['author' => $username, 'type' => 'private'] // You can see public OR your own
+                ]
+            ];
+        }
+
+        $finalFilter = [
+            '$and' => [
+                $titleFilter,
+                $visibilityFilter
+            ]
+        ];
+
+
+        try {
+            $imagesCollection = self::getCollection('images');
+            if (!$imagesCollection) return [];
+
+            // Execute the query and return the results as an array.
+            return $imagesCollection->find($finalFilter)->toArray(); // Limit to 20 results for performance
+
+        } catch (Exception) {
+            return [];
+        }
+    }
+
     public static function getUser($username) {
         $user = self::findOne('username', $username, 'users');
         return $user;

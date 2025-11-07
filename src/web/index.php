@@ -31,6 +31,10 @@ $router->addRoute('POST', '/register', 'UserController','handleRegister');
 $router->addRoute('GET', '/saved', 'GalleryController', 'showSaved');
 $router->addRoute('POST', '/save', 'GalleryController', 'handleSavedForm');
 
+# AJAX Search
+$router->addRoute('GET', '/search', 'SearchController', 'showSearchPage');
+$router->addRoute('GET', '/search/ajax', 'SearchController', 'ajaxSearch');
+
 
 // Dispatch the request
 $router->dispatch($requestMethod, $requestUri);
