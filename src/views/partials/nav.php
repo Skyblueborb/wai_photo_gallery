@@ -8,10 +8,8 @@
     <div class="nav-right">
         <?php if ($isLoggedIn): ?>
             <div class="nav-profile">
-                <?php if (!empty($profile_picture)): ?>
-                    <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Profile Picture">
-                <?php endif; ?>
                 <span><?php echo htmlspecialchars($username); ?></span>
+                <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Profile Picture">
             </div>
             <a href="/logout" class="nav-button">Logout</a>
         <?php else: ?>

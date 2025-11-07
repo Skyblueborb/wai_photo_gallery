@@ -34,6 +34,12 @@ nav {
   gap: 1rem;
 }
 
+.nav-profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .nav-profile img {
   width: 40px;
   height: 40px;
@@ -41,6 +47,7 @@ nav {
 
 .nav-profile span {
   font-weight: bold;
+  margin-right: 20px;
 }
 
 .nav-button {
