@@ -62,10 +62,12 @@ class DatabaseUtils {
     }
 
     public static function searchImagesByTitle($searchTerm, $username) {
+        $safeSearchTerm = preg_quote($searchTerm, '/');
+
         // i option means case insensitive.
         $titleFilter = [
             'title' => [
-                '$regex' => $searchTerm,
+                '$regex' => $safeSearchTerm,
                 '$options' => 'i'
             ]
         ];
