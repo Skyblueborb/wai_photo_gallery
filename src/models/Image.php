@@ -205,7 +205,6 @@ class ImageModel {
         $dbResult = DatabaseUtils::getVisiblePhotosPaginated($username, $page, $perPage);
 
         $visibleDocs = $dbResult['documents'];
-        $totalImages = $dbResult['total'];
 
         $formattedImages = [];
         foreach ($visibleDocs as $doc) {
@@ -231,6 +230,12 @@ class ImageModel {
                 'id' => $folder,
                 'metadata' => $metadata
             ];
+        }
+
+        if(!isset($filterFolders)) {
+            $totalImages = $dbResult['total'];
+        } else {
+            $totalImages = count($filterFolders);
         }
 
         $totalPages = ceil($totalImages / $perPage);
