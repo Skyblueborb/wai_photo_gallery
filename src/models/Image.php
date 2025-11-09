@@ -202,7 +202,7 @@ class ImageModel {
     public static function getAll($page = 1, $perPage = 4, $filterFolders = null) {
         $username = $_SESSION['username'] ?? null;
 
-        $dbResult = DatabaseUtils::getVisiblePhotosPaginated($username, $page, $perPage);
+        $dbResult = DatabaseUtils::getVisiblePhotosPaginated($username, $page, $perPage, $filterFolders);
 
         $visibleDocs = $dbResult['documents'];
 

@@ -99,14 +99,29 @@ class DatabaseUtils {
         }
     }
 
-    public static function getVisiblePhotosPaginated($username, $page, $perPage) {
-        $filter = ['type' => 'public'];
+    public static function getVisiblePhotosPaginated($username, $page, $perPage, $filterFolders = null) {
+        $visibilityFilter = ['type' => 'public'];
 
         if ($username !== null) {
-            $filter = [
+            $visibilityFilter = [
                 '$or' => [
                     ['type' => 'public'],
                     ['author' => $username, 'type' => 'private']
+                ]
+            ];
+        }
+
+        $finalFilter = $visibilityFilter;
+
+        if ($filterFolders !== null) {
+            if (empty($filterFolders)) {
+                return ['documents' => [], 'total' => 0];
+            }
+
+            $finalFilter = [
+                '$and' => [
+                    $visibilityFilter,
+                    ['folder' => ['$in' => $filterFolders]]
                 ]
             ];
         }
@@ -115,7 +130,7 @@ class DatabaseUtils {
             $imagesCollection = self::getCollection('images');
             if (!$imagesCollection) return ['documents' => [], 'total' => 0];
 
-            $total = $imagesCollection->countDocuments($filter);
+            $total = $imagesCollection->countDocuments($finalFilter);
 
             $options = [
                 'sort' => ['_id' => -1],
@@ -123,7 +138,7 @@ class DatabaseUtils {
                 'limit' => $perPage
             ];
 
-            $cursor = $imagesCollection->find($filter, $options);
+            $cursor = $imagesCollection->find($finalFilter, $options);
 
             return [
                 'documents' => $cursor->toArray(),
