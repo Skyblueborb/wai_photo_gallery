@@ -24,7 +24,7 @@ include 'partials/header.php';
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <p class="no-images">No images have been saved yet.</p>
+            <p class="no-images">No images have been uploaded yet.</p>
         <?php endif; ?>
     </div>
     </form>
