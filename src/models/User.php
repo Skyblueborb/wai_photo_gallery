@@ -44,6 +44,12 @@ class UserModel {
                 mkdir(PFP_PATH, 0755, true);
             }
 
+            $filesize = $file['profile_picture']['size'];
+            if($filesize > ONE_MB) {
+                $this->errors['size'] = 'Filesize is too big, limit is 1MB.';
+                return false;
+            }
+
             $timestamp = time();
 
             $file_name = basename($profile_picture['name']);
