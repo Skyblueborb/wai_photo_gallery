@@ -18,8 +18,8 @@ class ImageModel {
     public function save($image, $metadata) {
         $file_name = $this->sanitizeFilename($image['name']);
         $mimetype = $image['type'];
-        $allowed_extensions = ['jpg', 'png'];
-        $allowed_mimetypes = ['image/png', 'image/jpeg'];
+        $allowed_extensions = ['jpg', 'png', 'jpeg'];
+        $allowed_mimetypes = ['image/png', 'image/jpeg', 'image/jpg'];
         $file_extension = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
         $filename_without_ext = pathinfo($file_name, PATHINFO_FILENAME);
 

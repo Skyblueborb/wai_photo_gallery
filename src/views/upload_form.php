@@ -29,7 +29,7 @@ include 'partials/header.php';
         </div>
         <div class="form-group">
             <label for="image_input">Select image:</label>
-            <input type="file" id="image_input" name="image_file" accept="image/png, image/jpeg" required>
+            <input type="file" id="image_input" name="image_file" accept="image/png, image/jpeg, image/jpg" required>
         </div>
 
         <?php if ($isLoggedIn): ?>
